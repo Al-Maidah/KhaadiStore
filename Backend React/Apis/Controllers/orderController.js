@@ -10,9 +10,16 @@ async function create(req, res) {
       return res.status(400).json({ message: 'Email is required to place an order.' });
     }
 
+    // Sanitise items: ensure id is always stored as a String (product ids can
+    // be numbers like 6 or composite strings like "6-1")
+    const sanitisedItems = (items || []).map((item) => ({
+      ...item,
+      id: item.id !== undefined ? String(item.id) : undefined,
+    }));
+
     const order = await Order.create({
       userId, email, newsletter, shipping,
-      paymentMethod, items, subtotal, shippingCost, total,
+      paymentMethod, items: sanitisedItems, subtotal, shippingCost, total,
     });
 
     // Send confirmation email (non-blocking — order is already created)

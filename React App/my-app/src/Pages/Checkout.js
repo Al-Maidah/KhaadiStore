@@ -154,7 +154,7 @@ export default function Checkout() {
           newsletter,
           shipping,
           paymentMethod,
-          items: cart,
+          items: cart.map((item) => ({ ...item, id: String(item.id) })),
           subtotal,
           shippingCost,
           total,
