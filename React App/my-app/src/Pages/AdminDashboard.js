@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard, ShoppingBag, Users, Store,
+  LogOut, AlertTriangle, Search, RefreshCw,
+  TrendingUp, DollarSign, Calendar, Package,
+  CheckCircle2, Loader2,
+} from 'lucide-react';
 import { api } from '../api/client';
 
 const STATUS_COLORS = {
@@ -9,13 +15,15 @@ const STATUS_COLORS = {
   delivered:  { bg: '#e8f5e9', color: '#2e7d32' },
   cancelled:  { bg: '#fce4ec', color: '#b71c1c' },
 };
-
 const STATUS_OPTIONS = ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-function StatCard({ label, value, sub, icon, accent }) {
+/* ── small reusable components ── */
+function StatCard({ label, value, sub, icon: Icon, accent }) {
   return (
     <div className="adm-stat-card" style={{ borderTop: `4px solid ${accent}` }}>
-      <div className="adm-stat-icon" style={{ background: accent + '18', color: accent }}>{icon}</div>
+      <div className="adm-stat-icon" style={{ background: accent + '18', color: accent }}>
+        <Icon size={22} strokeWidth={1.8} />
+      </div>
       <div className="adm-stat-body">
         <p className="adm-stat-label">{label}</p>
         <h3 className="adm-stat-value">{value}</h3>
@@ -35,13 +43,11 @@ function BarChart({ data }) {
             <div
               className="adm-bar-fill"
               style={{ height: `${Math.max((d.revenue / max) * 100, 2)}%` }}
-              title={`PKR ${d.revenue.toLocaleString()}`}
+              title={`PKR ${d.revenue.toLocaleString()} · ${d.orders} order${d.orders !== 1 ? 's' : ''}`}
             />
           </div>
           <span className="adm-bar-label">{d.label}</span>
-          <span className="adm-bar-val">
-            {d.orders > 0 ? d.orders : '–'}
-          </span>
+          <span className="adm-bar-val">{d.orders > 0 ? d.orders : '–'}</span>
         </div>
       ))}
     </div>
@@ -63,27 +69,25 @@ function StatusBadge({ status }) {
   );
 }
 
+/* ── main component ── */
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [stats, setStats]         = useState(null);
-  const [orders, setOrders]       = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
+  const [activeTab, setActiveTab]   = useState('dashboard');
+  const [stats, setStats]           = useState(null);
+  const [orders, setOrders]         = useState([]);
+  const [customers, setCustomers]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
   const [updatingId, setUpdatingId] = useState(null);
-  const [search, setSearch]       = useState('');
+  const [search, setSearch]         = useState('');
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  // Verify admin session on mount
+  /* verify session */
   useEffect(() => {
-    if (!sessionStorage.getItem('admin_logged_in')) {
-      navigate('/admin/login');
-      return;
-    }
+    if (!sessionStorage.getItem('admin_logged_in')) { navigate('/admin/login'); return; }
     api.adminCheck().catch(() => {
       sessionStorage.removeItem('admin_logged_in');
       navigate('/admin/login');
@@ -91,40 +95,24 @@ export default function AdminDashboard() {
   }, [navigate]);
 
   const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const s = await api.adminStats();
-      setStats(s);
-    } catch (err) {
-      setError(err.message || 'Failed to load dashboard data.');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError('');
+    try { setStats(await api.adminStats()); }
+    catch (e) { setError(e.message || 'Failed to load dashboard.'); }
+    finally { setLoading(false); }
   }, []);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    try {
-      const o = await api.adminOrders();
-      setOrders(o);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    try { setOrders(await api.adminOrders()); }
+    catch (e) { setError(e.message); }
+    finally { setLoading(false); }
   }, []);
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
-    try {
-      const c = await api.adminCustomers();
-      setCustomers(c);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    try { setCustomers(await api.adminCustomers()); }
+    catch (e) { setError(e.message); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -138,15 +126,9 @@ export default function AdminDashboard() {
     try {
       const updated = await api.adminUpdateStatus(orderId, newStatus);
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: updated.status } : o));
-      if (stats) {
-        const refreshed = await api.adminStats();
-        setStats(refreshed);
-      }
-    } catch (err) {
-      alert('Failed to update status: ' + err.message);
-    } finally {
-      setUpdatingId(null);
-    }
+      if (stats) setStats(await api.adminStats());
+    } catch (e) { alert('Failed to update status: ' + e.message); }
+    finally { setUpdatingId(null); }
   };
 
   const handleLogout = async () => {
@@ -157,7 +139,6 @@ export default function AdminDashboard() {
 
   const fmt = (n) => `PKR ${(n || 0).toLocaleString()}`;
 
-  // Filtered data for search
   const filteredOrders = orders.filter(o =>
     !search ||
     (o.orderNumber || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -171,14 +152,14 @@ export default function AdminDashboard() {
   );
 
   const navItems = [
-    { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-    { id: 'orders',    icon: '📦', label: 'Orders' },
-    { id: 'customers', icon: '👥', label: 'Customers' },
+    { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'orders',    Icon: ShoppingBag,     label: 'Orders'    },
+    { id: 'customers', Icon: Users,           label: 'Customers' },
   ];
 
   return (
     <div className="adm-layout">
-      {/* ── Sidebar ────────────────────────────────────────── */}
+      {/* ── Sidebar ── */}
       <aside className="adm-sidebar">
         <div className="adm-sidebar-brand">
           <span className="adm-brand-logo">K</span>
@@ -189,33 +170,33 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="adm-nav">
-          {navItems.map(item => (
+          {navItems.map(({ id, Icon, label }) => (
             <button
-              key={item.id}
-              className={`adm-nav-btn ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => { setActiveTab(item.id); setSearch(''); }}
+              key={id}
+              className={`adm-nav-btn ${activeTab === id ? 'active' : ''}`}
+              onClick={() => { setActiveTab(id); setSearch(''); }}
             >
-              <span className="adm-nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
+              <Icon size={16} strokeWidth={activeTab === id ? 2.2 : 1.8} className="adm-nav-icon" />
+              <span>{label}</span>
             </button>
           ))}
         </nav>
 
         <div className="adm-sidebar-footer">
           <a href="/" className="adm-nav-btn" style={{ textDecoration: 'none' }}>
-            <span className="adm-nav-icon">🏪</span>
+            <Store size={16} strokeWidth={1.8} className="adm-nav-icon" />
             <span>View Store</span>
           </a>
           <button className="adm-nav-btn adm-logout-btn" onClick={handleLogout}>
-            <span className="adm-nav-icon">🚪</span>
+            <LogOut size={16} strokeWidth={1.8} className="adm-nav-icon" />
             <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* ── Main ────────────────────────────────────────────── */}
+      {/* ── Main ── */}
       <main className="adm-main">
-        {/* Top bar */}
+        {/* Topbar */}
         <div className="adm-topbar">
           <div>
             <h1 className="adm-page-title">
@@ -226,33 +207,54 @@ export default function AdminDashboard() {
           </div>
           <div className="adm-topbar-right">
             {(activeTab === 'orders' || activeTab === 'customers') && (
-              <input
-                className="adm-search"
-                placeholder={activeTab === 'orders' ? 'Search by order # or email…' : 'Search by name or email…'}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+              <div className="adm-search-wrap">
+                <Search size={14} className="adm-search-icon" />
+                <input
+                  className="adm-search"
+                  placeholder={activeTab === 'orders' ? 'Search by order # or email…' : 'Search by name or email…'}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+            )}
+            {activeTab === 'dashboard' && (
+              <button
+                className="adm-refresh-btn"
+                onClick={loadDashboard}
+                title="Refresh"
+              >
+                <RefreshCw size={15} />
+              </button>
             )}
             <div className="adm-avatar">A</div>
           </div>
         </div>
 
-        {error && <div className="adm-error-banner">⚠️ {error}</div>}
-        {loading && <div className="adm-loading">Loading…</div>}
+        {error && (
+          <div className="adm-error-banner">
+            <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        {/* ── DASHBOARD TAB ─────────────────────────────────── */}
+        {loading && (
+          <div className="adm-loading">
+            <Loader2 size={22} className="adm-spinner" />
+            Loading…
+          </div>
+        )}
+
+        {/* ── DASHBOARD TAB ── */}
         {!loading && activeTab === 'dashboard' && stats && (
           <div className="adm-dashboard-content">
 
-            {/* Stats row */}
             <div className="adm-stats-grid">
-              <StatCard label="Total Orders"    value={stats.totalOrders}         sub="All time"               icon="📦" accent="#1565c0" />
-              <StatCard label="Total Revenue"   value={fmt(stats.totalRevenue)}   sub="All time"               icon="💰" accent="#2e7d32" />
-              <StatCard label="Total Customers" value={stats.totalCustomers}      sub="Registered accounts"    icon="👥" accent="#6a1b9a" />
-              <StatCard label="Today's Orders"  value={stats.todayOrders}         sub={fmt(stats.todayRevenue) + ' revenue'} icon="📅" accent="#e65100" />
+              <StatCard label="Total Orders"    value={stats.totalOrders}       sub="All time"                            icon={Package}    accent="#1565c0" />
+              <StatCard label="Total Revenue"   value={fmt(stats.totalRevenue)} sub="All time"                            icon={DollarSign} accent="#2e7d32" />
+              <StatCard label="Total Customers" value={stats.totalCustomers}    sub="Registered accounts"                 icon={Users}      accent="#6a1b9a" />
+              <StatCard label="Today's Orders"  value={stats.todayOrders}       sub={fmt(stats.todayRevenue) + ' revenue'} icon={Calendar}   accent="#e65100" />
             </div>
 
-            {/* Revenue summary row */}
             <div className="adm-revenue-row">
               <div className="adm-revenue-card">
                 <p className="adm-rev-label">TODAY</p>
@@ -270,7 +272,10 @@ export default function AdminDashboard() {
                 <p className="adm-rev-sub">{stats.monthOrders} order{stats.monthOrders !== 1 ? 's' : ''}</p>
               </div>
               <div className="adm-revenue-card adm-status-breakdown">
-                <p className="adm-rev-label">ORDER STATUS</p>
+                <p className="adm-rev-label">
+                  <TrendingUp size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                  ORDER STATUS
+                </p>
                 {Object.entries(stats.statusBreakdown || {}).map(([s, n]) => (
                   <div key={s} style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                     <StatusBadge status={s} />
@@ -283,20 +288,17 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Bar chart */}
             <div className="adm-card adm-chart-card">
               <div className="adm-card-header">
                 <h4>Sales — Last 7 Days</h4>
-                <span className="adm-card-badge">Revenue &amp; Orders/day</span>
+                <span className="adm-card-badge">Revenue &amp; Orders / day</span>
               </div>
-              {stats.last7 && stats.last7.some(d => d.revenue > 0) ? (
-                <BarChart data={stats.last7} />
-              ) : (
-                <div className="adm-empty-chart">No sales data yet for the last 7 days</div>
-              )}
+              {stats.last7 && stats.last7.some(d => d.revenue > 0)
+                ? <BarChart data={stats.last7} />
+                : <div className="adm-empty-chart">No sales data yet for the last 7 days</div>
+              }
             </div>
 
-            {/* Recent orders */}
             <div className="adm-card">
               <div className="adm-card-header">
                 <h4>Recent Orders</h4>
@@ -305,10 +307,7 @@ export default function AdminDashboard() {
               <div className="adm-table-wrap">
                 <table className="adm-table">
                   <thead>
-                    <tr>
-                      <th>#</th><th>Order No.</th><th>Customer</th>
-                      <th>Items</th><th>Total</th><th>Status</th><th>Date</th>
-                    </tr>
+                    <tr><th>#</th><th>Order No.</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr>
                   </thead>
                   <tbody>
                     {(stats.recentOrders || []).length === 0 && (
@@ -318,7 +317,10 @@ export default function AdminDashboard() {
                       <tr key={o._id}>
                         <td>{i + 1}</td>
                         <td><strong>{o.orderNumber}</strong></td>
-                        <td>{o.shipping?.firstName} {o.shipping?.lastName}<br /><span className="adm-sub-text">{o.email}</span></td>
+                        <td>
+                          {o.shipping?.firstName} {o.shipping?.lastName}
+                          <br /><span className="adm-sub-text">{o.email}</span>
+                        </td>
                         <td>{(o.items || []).length} item{(o.items || []).length !== 1 ? 's' : ''}</td>
                         <td><strong>{fmt(o.total)}</strong></td>
                         <td><StatusBadge status={o.status} /></td>
@@ -332,7 +334,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ── ORDERS TAB ────────────────────────────────────── */}
+        {/* ── ORDERS TAB ── */}
         {!loading && activeTab === 'orders' && (
           <div className="adm-card">
             <div className="adm-card-header">
@@ -356,8 +358,8 @@ export default function AdminDashboard() {
                       <td><strong>{o.orderNumber}</strong></td>
                       <td className="adm-sub-text">{o.email}</td>
                       <td>
-                        {o.shipping?.firstName} {o.shipping?.lastName}<br />
-                        <span className="adm-sub-text">{o.shipping?.city}, {o.shipping?.state}</span>
+                        {o.shipping?.firstName} {o.shipping?.lastName}
+                        <br /><span className="adm-sub-text">{o.shipping?.city}, {o.shipping?.state}</span>
                       </td>
                       <td>
                         {(o.items || []).map((item, idx) => (
@@ -383,7 +385,9 @@ export default function AdminDashboard() {
                             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                           ))}
                         </select>
-                        {updatingId === o._id && <span style={{ fontSize: 10, color: '#888' }}> saving…</span>}
+                        {updatingId === o._id && (
+                          <Loader2 size={12} className="adm-spinner" style={{ marginLeft: 6 }} />
+                        )}
                       </td>
                       <td className="adm-sub-text">{new Date(o.createdAt).toLocaleDateString()}</td>
                     </tr>
@@ -394,7 +398,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ── CUSTOMERS TAB ─────────────────────────────────── */}
+        {/* ── CUSTOMERS TAB ── */}
         {!loading && activeTab === 'customers' && (
           <div className="adm-card">
             <div className="adm-card-header">
@@ -418,7 +422,11 @@ export default function AdminDashboard() {
                       <td>{i + 1}</td>
                       <td><strong>{c.firstName} {c.lastName}</strong></td>
                       <td className="adm-sub-text">{c.email}</td>
-                      <td>{c.isSubscribed ? '✅ Yes' : '—'}</td>
+                      <td>
+                        {c.isSubscribed
+                          ? <CheckCircle2 size={14} color="#2e7d32" strokeWidth={2.5} />
+                          : <span style={{ color: '#ccc' }}>—</span>}
+                      </td>
                       <td>{(c.cart || []).length}</td>
                       <td>{(c.wishlist || []).length}</td>
                       <td className="adm-sub-text">{new Date(c.createdAt).toLocaleDateString()}</td>

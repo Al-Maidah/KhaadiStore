@@ -3,7 +3,7 @@ const Order = require('../Models/orderModel');
 
 // ── Admin credentials come from env vars ──────────────────────────────────────
 const ADMIN_ID       = () => process.env.ADMIN_ID       || 'KHAADI_ADMIN_001';
-const ADMIN_EMAIL    = () => process.env.ADMIN_EMAIL    || 'admin@khaadi.com';
+const ADMIN_EMAIL    = () => (process.env.ADMIN_EMAIL    || 'almaidahnadeem06@gmail.com').toLowerCase();
 const ADMIN_PASSWORD = () => process.env.ADMIN_PASSWORD || 'KhaadiAdmin@2024';
 
 // ── Middleware: protect admin routes ─────────────────────────────────────────
@@ -17,7 +17,9 @@ function requireAdmin(req, res, next) {
 // POST /admin/login
 async function login(req, res) {
   try {
-    const { adminId, email, password } = req.body;
+    const adminId  = String(req.body.adminId || '').trim();
+    const email    = String(req.body.email || '').trim().toLowerCase();
+    const password = req.body.password;
 
     if (!adminId || !email || !password) {
       return res.status(400).json({ message: 'adminId, email and password are all required.' });
@@ -160,7 +162,7 @@ async function updateOrderStatus(req, res) {
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { $set: { status } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!order) return res.status(404).json({ message: 'Order not found.' });
     return res.json(order);

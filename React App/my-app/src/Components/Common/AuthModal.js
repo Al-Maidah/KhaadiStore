@@ -652,20 +652,10 @@ export default function AuthModal({ isOpen, onClose }) {
               {isSignUp ? 'SIGN UP' : 'LOGIN'}
             </button>
 
-            {/* SOCIAL LOGIN DIVIDER */}
             {!isSignUp && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0', color: '#ccc', fontSize: '11px' }}>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: '#e0e0e0' }}></div>
-                  <span style={{ padding: '0 12px', color: '#777', fontWeight: '600', letterSpacing: '0.5px' }}>OR LOGIN WITH</span>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: '#e0e0e0' }}></div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #dcdcdc', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold', color: '#ea4335' }}>G</button>
-                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #dcdcdc', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold', color: '#1877f2' }}>f</button>
-                </div>
-              </>
+              <p style={{ textAlign: 'center', fontSize: '12px', color: '#888', marginTop: 16, lineHeight: 1.5 }}>
+                Sign in with the same email and password you used to create your account.
+              </p>
             )}
 
             {/* SWITCH SIGN-IN / SIGN-UP */}

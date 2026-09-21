@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, Mail, KeyRound, Eye, EyeOff, AlertCircle, ArrowLeft, LogIn } from 'lucide-react';
 import { api } from '../api/client';
 
 export default function AdminLogin() {
@@ -9,7 +10,6 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  // If already logged in as admin, redirect to dashboard
   useEffect(() => {
     if (sessionStorage.getItem('admin_logged_in')) {
       api.adminCheck()
@@ -58,73 +58,85 @@ export default function AdminLogin() {
       <div className="admin-login-right">
         <div className="admin-login-card">
           <div className="admin-login-header">
-            <div className="admin-login-icon">🔐</div>
+            <div className="admin-login-icon">
+              <ShieldCheck size={40} strokeWidth={1.5} color="#1a237e" />
+            </div>
             <h2>Admin Sign In</h2>
             <p>Enter your admin credentials to access the dashboard</p>
           </div>
 
           {error && (
             <div className="admin-login-error">
-              <span>⚠️</span> {error}
+              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="admin-login-form">
             <div className="admin-form-group">
               <label>Admin ID</label>
-              <input
-                type="text"
-                name="adminId"
-                value={form.adminId}
-                onChange={handleChange}
-                placeholder="Enter admin ID"
-                autoComplete="off"
-              />
+              <div className="admin-input-wrapper">
+                <ShieldCheck size={15} className="admin-input-icon" />
+                <input
+                  type="text"
+                  name="adminId"
+                  value={form.adminId}
+                  onChange={handleChange}
+                  placeholder=""
+                  autoComplete="off"
+                />
+              </div>
             </div>
 
             <div className="admin-form-group">
               <label>Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="admin@khaadi.com"
-                autoComplete="off"
-              />
+              <div className="admin-input-wrapper">
+                <Mail size={15} className="admin-input-icon" />
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder=""
+                  autoComplete="off"
+                />
+              </div>
             </div>
 
             <div className="admin-form-group">
               <label>Password</label>
-              <div className="admin-pwd-wrapper">
+              <div className="admin-pwd-wrapper admin-input-wrapper">
+                <KeyRound size={15} className="admin-input-icon" />
                 <input
                   type={showPwd ? 'text' : 'password'}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  placeholder="Enter password"
+                  placeholder=""
+                  style={{ paddingRight: 40 }}
                 />
                 <button
                   type="button"
                   className="admin-pwd-toggle"
                   onClick={() => setShowPwd(!showPwd)}
+                  aria-label={showPwd ? 'Hide password' : 'Show password'}
                 >
-                  {showPwd ? '🙈' : '👁️'}
+                  {showPwd
+                    ? <EyeOff size={16} color="#777" />
+                    : <Eye size={16} color="#777" />}
                 </button>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="admin-login-btn"
-              disabled={loading}
-            >
-              {loading ? 'SIGNING IN...' : 'SIGN IN TO DASHBOARD'}
+            <button type="submit" className="admin-login-btn" disabled={loading}>
+              {loading
+                ? 'SIGNING IN…'
+                : <><LogIn size={15} style={{ marginRight: 8, verticalAlign: 'middle' }} />SIGN IN TO DASHBOARD</>}
             </button>
           </form>
 
           <p className="admin-login-back">
-            <a href="/">← Back to Store</a>
+            <a href="/"><ArrowLeft size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Back to Store</a>
           </p>
         </div>
       </div>

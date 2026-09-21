@@ -47,10 +47,22 @@ app.get('/', (req, res) => {
   res.json({ ok: true, message: 'API is running' });
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const connected = mongoose.connection.readyState === 1;
+  let counts = null;
+  if (connected && mongoose.connection.db) {
+    const db = mongoose.connection.db;
+    counts = {
+      users: await db.collection('users').countDocuments(),
+      orders: await db.collection('orders').countDocuments(),
+      products: await db.collection('products').countDocuments(),
+    };
+  }
   res.json({
     ok: true,
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    db: connected ? 'connected' : 'disconnected',
+    database: mongoose.connection.db?.databaseName || null,
+    counts,
     session: req.session?.id ? 'active' : 'none',
   });
 });

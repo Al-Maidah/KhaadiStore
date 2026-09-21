@@ -3361,10 +3361,11 @@ text-decoration: underline;
   max-width: 420px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
-.admin-login-icon { font-size: 36px; margin-bottom: 16px; }
+.admin-login-icon { display: flex; justify-content: center; margin-bottom: 16px; }
 .admin-login-header h2 { font-size: 22px; letter-spacing: 1px; margin: 0 0 6px; color: #111; }
 .admin-login-header p  { color: #888; font-size: 13px; margin: 0 0 24px; }
 .admin-login-error {
+  display: flex; align-items: flex-start; gap: 7px;
   background: #fce4ec;
   color: #b71c1c;
   border-radius: 6px;
@@ -3372,6 +3373,14 @@ text-decoration: underline;
   font-size: 13px;
   margin-bottom: 18px;
 }
+/* Input wrapper with leading icon */
+.admin-input-wrapper { position: relative; }
+.admin-input-icon {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: #9aa; pointer-events: none;
+}
+.admin-input-wrapper input { padding-left: 36px; }
 .admin-login-form { display: flex; flex-direction: column; gap: 18px; }
 .admin-form-group label {
   display: block;
@@ -3399,8 +3408,10 @@ text-decoration: underline;
 .admin-pwd-toggle {
   position: absolute; right: 12px; top: 50%;
   transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; font-size: 16px; padding: 0;
+  background: none; border: none; cursor: pointer; padding: 4px;
+  display: flex; align-items: center; justify-content: center; color: #777;
 }
+.admin-pwd-toggle:hover { color: #1a237e; }
 .admin-login-btn {
   width: 100%;
   padding: 14px;

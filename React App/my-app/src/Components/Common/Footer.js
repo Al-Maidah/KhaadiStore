@@ -143,6 +143,9 @@ export default function Footer() {
           <span className="copyright-text">
             Copyright © 2026 Weaves Corporation Limited. All Rights Reserved.
           </span>
+          <a href="/admin/login" style={{ display: 'block', marginTop: 8, fontSize: 11, color: '#999', letterSpacing: 1 }}>
+            Admin
+          </a>
         </div>
 
         <button className="scroll-top-btn" onClick={scrollToTop} aria-label="Scroll to top">

@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     cart:      { type: Array, default: [] },
     wishlist:  { type: Array, default: [] },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'users' }
 );
 
 // Hash password before saving

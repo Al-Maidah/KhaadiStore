@@ -8,7 +8,7 @@ const studentSchema = new mongoose.Schema(
     grade:   { type: String },
     phone:   { type: String },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'students' }
 );
 
 module.exports = mongoose.model('Student', studentSchema);

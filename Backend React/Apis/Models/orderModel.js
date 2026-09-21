@@ -35,7 +35,7 @@ const orderSchema = new mongoose.Schema(
     total:         { type: Number, default: 0 },
     status:        { type: String, default: 'placed' },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'orders' }
 );
 
 // Auto-generate orderNumber before saving

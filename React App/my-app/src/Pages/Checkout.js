@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Check, Pencil } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Pencil, ShoppingBag, Banknote } from "lucide-react";
 import { useCart } from "../Components/Common/CartContext";
 import { useAuth } from "../Components/Common/AuthContext";
 import { parsePrice, formatPrice } from "../utils/productUtils";
@@ -185,7 +185,7 @@ export default function Checkout() {
     return (
       <div className="checkout-login-gate">
         <div className="checkout-login-gate-box">
-          <div className="checkout-gate-icon">🛍️</div>
+          <div className="checkout-gate-icon"><ShoppingBag size={52} strokeWidth={1.3} color="#1a237e" /></div>
           <h2>Sign In to Continue</h2>
           <p>
             Please sign in or create a free account to place your order.<br />
@@ -577,7 +577,7 @@ export default function Checkout() {
                     <strong>COD</strong>
                     <span>PAYMENT WILL BE COLLECTED AT THE TIME OF DELIVERY</span>
                   </div>
-                  <span className="payment-cod-icon">💵</span>
+                  <span className="payment-cod-icon"><Banknote size={20} color="#2e7d32" strokeWidth={1.7} /></span>
                 </label>
               </div>
             )}
