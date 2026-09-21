@@ -85,7 +85,6 @@ app.post('/logout', (req, res) => {
 });
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/students', require('./Routes/studRoutes'));
 app.use('/products', require('./Routes/productRoutes'));
 app.use('/users',    require('./Routes/userRoutes'));
 app.use('/orders',   require('./Routes/orderRoutes'));

@@ -1,6 +1,6 @@
 # 📚 Khaadi Store — Complete Full-Stack Documentation
 
-> Written in **simple, plain English** — no assumed knowledge required.  
+> Written in **simple, plain English** — no assumed knowledge required.
 > Last updated: September 2026
 
 ---
@@ -118,7 +118,7 @@ React Project/
         │   └── localData.js     ← Local product data + localStorage auth fallback
         │
         ├── Components/
-        │   ├── Common/
+│   ├── Common/
         │   │   ├── Header.js         ← Navbar
         │   │   ├── Footer.js
         │   │   ├── AuthContext.js    ← Login/register state + API calls
@@ -128,26 +128,26 @@ React Project/
         │   │   ├── WishlistContext.js ← Wishlist state, auto-syncs to DB
         │   │   ├── EditCartModal.js
         │   │   └── MoveToWishlistModal.js
-        │   ├── Cart/
+│   ├── Cart/
         │   │   ├── ProductBagButton.js
         │   │   ├── AddToBagModal.js
         │   │   └── CardSizeSelector.js
-        │   ├── Home/
+│   ├── Home/
         │   │   ├── HeroSlider.js
         │   │   ├── ProductSlider.js
         │   │   ├── TopPicksBanner.js
         │   │   └── BestsellersSection.js
-        │   ├── Product/
+│   ├── Product/
         │   │   ├── ProductBundleDetail.js
         │   │   ├── CollectionListing.js
         │   │   └── SizeGuide.js
-        │   ├── Sales/
+│   ├── Sales/
         │   │   ├── SaleBanner.js
         │   │   ├── FilterBar.js
         │   │   └── DiscountGrid.js
         │   ├── Fabrics/
         │   │   └── FabricsBanner.js
-        │   └── Account/
+│   └── Account/
         │       └── MyAccount.js      ← Full account dashboard component
         │
         └── Pages/

@@ -59,7 +59,7 @@ export default function AdminLogin() {
         <div className="admin-login-card">
           <div className="admin-login-header">
             <div className="admin-login-icon">
-              <ShieldCheck size={40} strokeWidth={1.5} color="#1a237e" />
+              <ShieldCheck size={40} strokeWidth={1.5} color="#7B1818" />
             </div>
             <h2>Admin Sign In</h2>
             <p>Enter your admin credentials to access the dashboard</p>

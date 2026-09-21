@@ -3325,7 +3325,8 @@ text-decoration: underline;
   background: #000;
 }
 /* -----------------------------------------------------------
-   ADMIN LOGIN PAGE
+   ADMIN LOGIN PAGE  —  Khaadi colour palette
+   Wine/Burgundy: #7B1818  |  Gold: #C4952A  |  Cream: #FBF6EE
 ----------------------------------------------------------- */
 .admin-login-page {
   display: flex;
@@ -3334,20 +3335,32 @@ text-decoration: underline;
 }
 .admin-login-left {
   flex: 1;
-  background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #1a237e 100%);
+  background: linear-gradient(150deg, #2E0A0A 0%, #5C1414 45%, #7B1818 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 48px;
   color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+/* subtle decorative circle */
+.admin-login-left::after {
+  content: '';
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  background: rgba(196,149,42,0.10);
+  bottom: -80px; right: -80px;
+  pointer-events: none;
 }
 .admin-login-brand h1 { font-size: 32px; letter-spacing: 6px; font-weight: 300; margin: 0; }
-.admin-login-brand p  { color: #aaa; font-size: 13px; letter-spacing: 3px; margin: 6px 0 0; }
+.admin-login-brand p  { color: #C4952A; font-size: 13px; letter-spacing: 3px; margin: 6px 0 0; }
 .admin-login-tagline h2 { font-size: 36px; font-weight: 300; line-height: 1.4; margin: 0 0 12px; }
-.admin-login-tagline p  { color: #aaa; font-size: 14px; letter-spacing: 1px; }
+.admin-login-tagline p  { color: rgba(255,255,255,0.55); font-size: 14px; letter-spacing: 1px; }
 .admin-login-right {
   flex: 1;
-  background: #f4f6fc;
+  background: #FBF6EE;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3359,11 +3372,11 @@ text-decoration: underline;
   padding: 40px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 28px rgba(123,24,24,0.10);
 }
 .admin-login-icon { display: flex; justify-content: center; margin-bottom: 16px; }
-.admin-login-header h2 { font-size: 22px; letter-spacing: 1px; margin: 0 0 6px; color: #111; }
-.admin-login-header p  { color: #888; font-size: 13px; margin: 0 0 24px; }
+.admin-login-header h2 { font-size: 22px; letter-spacing: 1px; margin: 0 0 6px; color: #2E0A0A; }
+.admin-login-header p  { color: #999; font-size: 13px; margin: 0 0 24px; }
 .admin-login-error {
   display: flex; align-items: flex-start; gap: 7px;
   background: #fce4ec;
@@ -3378,44 +3391,45 @@ text-decoration: underline;
 .admin-input-icon {
   position: absolute; left: 12px; top: 50%;
   transform: translateY(-50%);
-  color: #9aa; pointer-events: none;
+  color: #C4952A; pointer-events: none;
 }
 .admin-input-wrapper input { padding-left: 36px; }
 .admin-login-form { display: flex; flex-direction: column; gap: 18px; }
 .admin-form-group label {
   display: block;
   font-size: 11px;
-  color: #555;
+  color: #7B1818;
   letter-spacing: 1px;
   margin-bottom: 6px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
 }
 .admin-form-group input {
   width: 100%;
   padding: 12px 14px;
-  background: #f4f6fc;
-  border: 1px solid #d1d9e6;
+  background: #FBF6EE;
+  border: 1px solid #E8D5C4;
   border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: #2E0A0A;
 }
-.admin-form-group input:focus { border-color: #1a237e; }
+.admin-form-group input:focus { border-color: #7B1818; box-shadow: 0 0 0 3px rgba(123,24,24,0.08); }
 .admin-pwd-wrapper { position: relative; }
 .admin-pwd-wrapper input { padding-right: 46px; }
 .admin-pwd-toggle {
   position: absolute; right: 12px; top: 50%;
   transform: translateY(-50%);
   background: none; border: none; cursor: pointer; padding: 4px;
-  display: flex; align-items: center; justify-content: center; color: #777;
+  display: flex; align-items: center; justify-content: center; color: #999;
 }
-.admin-pwd-toggle:hover { color: #1a237e; }
+.admin-pwd-toggle:hover { color: #7B1818; }
 .admin-login-btn {
   width: 100%;
   padding: 14px;
-  background: #1c1c1c;
+  background: linear-gradient(90deg, #7B1818 0%, #5C1414 100%);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -3424,16 +3438,17 @@ text-decoration: underline;
   letter-spacing: 2px;
   cursor: pointer;
   margin-top: 6px;
-  transition: background 0.2s;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(123,24,24,0.25);
 }
-.admin-login-btn:hover:not(:disabled) { background: #1a237e; }
-.admin-login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.admin-login-btn:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 6px 18px rgba(123,24,24,0.35); }
+.admin-login-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 .admin-login-back { text-align: center; margin-top: 20px; font-size: 13px; }
-.admin-login-back a { color: #666; text-decoration: none; }
-.admin-login-back a:hover { color: #1c1c1c; text-decoration: underline; }
+.admin-login-back a { color: #999; text-decoration: none; }
+.admin-login-back a:hover { color: #7B1818; text-decoration: underline; }
 @media (max-width: 768px) {
   .admin-login-left { display: none; }
-  .admin-login-right { padding: 24px; }
+  .admin-login-right { padding: 24px; background: #FBF6EE; }
 }
 
 /* -----------------------------------------------------------
@@ -3498,7 +3513,7 @@ text-decoration: underline;
   transition: all 0.15s;
 }
 .adm-nav-btn:hover { background: #2d2d2d; color: #fff; }
-.adm-nav-btn.active { background: #fff; color: #1c1c1c; font-weight: 700; }
+.adm-nav-btn.active { background: #C4952A; color: #fff; font-weight: 700; }
 .adm-nav-icon { font-size: 16px; width: 20px; text-align: center; }
 .adm-sidebar-footer {
   padding: 12px;
@@ -3537,10 +3552,10 @@ text-decoration: underline;
   width: 260px;
   background: #fff;
 }
-.adm-search:focus { border-color: #1a237e; }
+.adm-search:focus { border-color: #7B1818; }
 .adm-avatar {
   width: 38px; height: 38px;
-  background: #1a237e;
+  background: #7B1818;
   color: #fff;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
