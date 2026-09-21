@@ -6,6 +6,8 @@ import { AuthProvider } from "./Components/Common/AuthContext";
 import { WishlistProvider } from "./Components/Common/WishlistContext";
 import { CartProvider } from "./Components/Common/CartContext";
 import CartDrawer from "./Components/Common/CartDrawer";
+import AdminLogin from "./Pages/AdminLogin";
+import AdminDashboard from "./Pages/AdminDashboard";
 
 import CartPage from "./Pages/CartPage";
 import Home from "./Pages/Home";
@@ -26,31 +28,38 @@ function App() {
     <AuthProvider>
     <CartProvider>
       <WishlistProvider>
-        <NavigationBar />
-        <CartDrawer /> 
-        
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/Home" element={<Home />} />
-          <Route path="/product/:id" element={<ReadyToWear />} />
-          <Route path="/readytowear" element={<ReadyToWearListing />} />
-          <Route path="/fabrics" element={<Fabrics />} />
-          <Route path="/fragrances" element={<Fragrances />} />
-          <Route path="/newin" element={<NewIn />} />
-          <Route path="/nowhappening" element={<NowHappening />} />
-          <Route path="/sale" element={<Sale />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          
-          {/* 2. Replace MyAccountPage with AccountWrapper here */}
-          <Route path="/account" element={<MyAccountPage />} />
-          
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/track-order" element={<TrackOrder />} />
-          <Route path="/ReadyToWear" element={<ReadyToWearListing />} />
-        </Routes>
+          {/* ── Admin routes (no header/footer) ─────────────── */}
+          <Route path="/admin/login"     element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin"           element={<AdminLogin />} />
 
-        <Footer />
+          {/* ── Store routes (with header/footer) ───────────── */}
+          <Route path="*" element={
+            <>
+              <NavigationBar />
+              <CartDrawer />
+              <Routes>
+                <Route path="/"              element={<Home />} />
+                <Route path="/Home"          element={<Home />} />
+                <Route path="/product/:id"   element={<ReadyToWear />} />
+                <Route path="/readytowear"   element={<ReadyToWearListing />} />
+                <Route path="/fabrics"       element={<Fabrics />} />
+                <Route path="/fragrances"    element={<Fragrances />} />
+                <Route path="/newin"         element={<NewIn />} />
+                <Route path="/nowhappening"  element={<NowHappening />} />
+                <Route path="/sale"          element={<Sale />} />
+                <Route path="/wishlist"      element={<Wishlist />} />
+                <Route path="/account"       element={<MyAccountPage />} />
+                <Route path="/checkout"      element={<Checkout />} />
+                <Route path="/cart"          element={<CartPage />} />
+                <Route path="/track-order"   element={<TrackOrder />} />
+                <Route path="/ReadyToWear"   element={<ReadyToWearListing />} />
+              </Routes>
+              <Footer />
+            </>
+          } />
+        </Routes>
       </WishlistProvider>
     </CartProvider>
     </AuthProvider>

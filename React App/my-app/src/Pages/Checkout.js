@@ -5,6 +5,7 @@ import { useCart } from "../Components/Common/CartContext";
 import { useAuth } from "../Components/Common/AuthContext";
 import { parsePrice, formatPrice } from "../utils/productUtils";
 import { api } from "../api/client";
+import AuthModal from "../Components/Common/AuthModal";
 
 const SHIPPING_METHODS = [
   { id: "fixed", label: "Fixed", description: "4-8 working days", price: 240 },
@@ -33,6 +34,8 @@ export default function Checkout() {
   const { cart, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // unused but keeps modal flexible
 
   const [activeStep, setActiveStep] = useState("email");
   const [emailComplete, setEmailComplete] = useState(false);
@@ -176,6 +179,42 @@ export default function Checkout() {
         : "PROCEED TO SHIPPING";
 
   const cityOptions = shipping.state ? CITIES[shipping.state] || [] : [];
+
+  // ── GATE: must be logged in to checkout ──────────────────────────────────
+  if (!user) {
+    return (
+      <div className="checkout-login-gate">
+        <div className="checkout-login-gate-box">
+          <div className="checkout-gate-icon">🛍️</div>
+          <h2>Sign In to Continue</h2>
+          <p>
+            Please sign in or create a free account to place your order.<br />
+            Your order confirmation and tracking ID will be sent to your email.
+          </p>
+          <div className="checkout-gate-btns">
+            <button
+              className="checkout-gate-btn-primary"
+              onClick={() => setShowAuthModal(true)}
+            >
+              SIGN IN
+            </button>
+            <button
+              className="checkout-gate-btn-secondary"
+              onClick={() => setShowAuthModal(true)}
+            >
+              CREATE ACCOUNT
+            </button>
+          </div>
+          <p className="checkout-gate-back">
+            <a href="/readytowear">← Continue Shopping</a>
+          </p>
+        </div>
+        {showAuthModal && (
+          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="checkout-page">

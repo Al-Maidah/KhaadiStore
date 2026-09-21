@@ -77,6 +77,7 @@ app.use('/students', require('./Routes/studRoutes'));
 app.use('/products', require('./Routes/productRoutes'));
 app.use('/users',    require('./Routes/userRoutes'));
 app.use('/orders',   require('./Routes/orderRoutes'));
+app.use('/admin',    require('./Routes/adminRoutes'));
 
 // ── DB connection + seed, then start server ───────────────────────────────────
 const PORT = process.env.PORT || 9000;

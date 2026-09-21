@@ -1,4 +1,5 @@
 const Order = require('../Models/orderModel');
+const { sendOrderConfirmation } = require('../../utils/emailService');
 
 // POST /orders
 async function create(req, res) {
@@ -9,7 +10,14 @@ async function create(req, res) {
       return res.status(400).json({ message: 'Email is required to place an order.' });
     }
 
-    const order = await Order.create({ userId, email, newsletter, shipping, paymentMethod, items, subtotal, shippingCost, total });
+    const order = await Order.create({
+      userId, email, newsletter, shipping,
+      paymentMethod, items, subtotal, shippingCost, total,
+    });
+
+    // Send confirmation email (non-blocking — order is already created)
+    sendOrderConfirmation(order.toObject());
+
     return res.status(201).json(order);
   } catch (err) {
     console.error('create order error:', err);

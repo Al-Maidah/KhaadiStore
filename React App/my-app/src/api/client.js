@@ -102,6 +102,29 @@ export const api = {
       return found;
     }
   },
+
+  // ── Admin ─────────────────────────────────────────────────
+  adminLogin: async (body) => {
+    return await request('/admin/login', { method: 'POST', body });
+  },
+  adminCheck: async () => {
+    return await request('/admin/check');
+  },
+  adminStats: async () => {
+    return await request('/admin/stats');
+  },
+  adminOrders: async () => {
+    return await request('/admin/orders');
+  },
+  adminCustomers: async () => {
+    return await request('/admin/customers');
+  },
+  adminUpdateStatus: async (id, status) => {
+    return await request(`/admin/orders/${id}/status`, { method: 'PUT', body: { status } });
+  },
+  adminLogout: async () => {
+    return await request('/admin/logout', { method: 'POST' });
+  },
 };
 
 export default api;
