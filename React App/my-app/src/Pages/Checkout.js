@@ -60,8 +60,6 @@ export default function Checkout() {
   const [showShippingErrors, setShowShippingErrors] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [punchMobile, setPunchMobile] = useState("");
-  const [otp, setOtp] = useState("");
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderError, setOrderError] = useState("");
 
@@ -163,7 +161,6 @@ export default function Checkout() {
         });
         setOrderPlaced(true);
         clearCart();
-        alert("Order placed successfully!");
         navigate("/");
       } catch (err) {
         setOrderError(err.message || "Could not place order. Please try again.");
@@ -522,49 +519,11 @@ export default function Checkout() {
             {activeStep === "payment" && (
               <div className="checkout-section-body">
                 <p className="checkout-payment-note">
-                  Please select one of the point/voucher redemption methods. Points/vouchers are
-                  not applicable on shipping or FBR charges as per our privacy policy. For more
-                  information please visit our FAQ Page
+                  Your order confirmation and tracking ID will be sent to your email after placing the order.
                 </p>
 
-                <div className="punch-points-box">
-                  <h4>PUNCH POINTS</h4>
-                  <div className="punch-points-row">
-                    <div className="checkout-field flex-grow">
-                      <label>Mobile number <span className="required">*</span></label>
-                      <input
-                        type="tel"
-                        value={punchMobile}
-                        onChange={(e) => setPunchMobile(e.target.value)}
-                        className="checkout-input"
-                      />
-                    </div>
-                    <button type="button" className="checkout-secondary-btn">
-                      REQUEST OTP
-                    </button>
-                  </div>
-                  <div className="checkout-field">
-                    <label>Enter OTP <span className="required">*</span></label>
-                    <input
-                      type="text"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="checkout-input"
-                    />
-                  </div>
-                  <div className="punch-points-actions">
-                    <button type="button" className="checkout-secondary-btn dark">
-                      VERIFY OTP
-                    </button>
-                  </div>
-                </div>
-
-                <p className="checkout-payment-note">Please select one of the payment methods</p>
-
                 <label
-                  className={`payment-method-card ${
-                    paymentMethod === "cod" ? "selected" : ""
-                  }`}
+                  className={`payment-method-card ${paymentMethod === "cod" ? "selected" : ""}`}
                 >
                   <input
                     type="radio"
