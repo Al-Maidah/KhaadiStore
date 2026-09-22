@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, ShoppingBag, Users, Store,
-  LogOut, AlertTriangle, Search, RefreshCw,
-  TrendingUp, DollarSign, Calendar, Package,
-  CheckCircle2, Loader2,
+  LayoutDashboard, ShoppingBag, Users, Store, LogOut,
+  AlertTriangle, Search, RefreshCw, TrendingUp,
+  DollarSign, Calendar, Package, CheckCircle2, Loader2,
+  Package2, Plus, Pencil, Trash2, X, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { api } from '../api/client';
 
+/* ─────────────────────────────────────────────────────── constants */
 const STATUS_COLORS = {
   placed:     { bg: '#e8f4fd', color: '#1565c0' },
   processing: { bg: '#fff3e0', color: '#e65100' },
@@ -17,7 +18,71 @@ const STATUS_COLORS = {
 };
 const STATUS_OPTIONS = ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-/* ── small reusable components ── */
+const COLLECTION_OPTIONS = [
+  { value: 'newin',    label: 'New In' },
+  { value: 'rtw',      label: 'Ready To Wear' },
+  { value: 'sale',     label: 'Sale' },
+  { value: 'home-top', label: 'Home' },
+];
+
+const PRODUCT_COLLECTIONS = [
+  { value: 'all',      label: 'All Products' },
+  { value: 'newin',    label: 'New In' },
+  { value: 'sale',     label: 'Sale' },
+  { value: 'rtw',      label: 'Ready To Wear' },
+  { value: 'home-top', label: 'Home' },
+];
+
+const EMPTY_FORM = {
+  title: '', category: '', priceNum: '', originalNum: '',
+  image: '', collections: [], tag: '',
+};
+
+/* ─────────────────────────────────────────────────────── helpers */
+function parsePkr(str) {
+  if (!str) return '';
+  return String(str).replace(/PKR\s*/i, '').replace(/,/g, '').trim();
+}
+
+function buildProductPayload(form) {
+  const priceNum    = parseFloat(form.priceNum)    || 0;
+  const originalNum = form.originalNum ? parseFloat(form.originalNum) : null;
+  const discountPct = originalNum ? Math.round(100 - (priceNum / originalNum) * 100) : null;
+
+  let subtitle = 'Ready To Wear';
+  if (form.collections.includes('newin') && !form.collections.includes('rtw')) subtitle = 'New In';
+  if (form.collections.includes('sale')) subtitle = 'Sale';
+
+  return {
+    title:          form.title.trim(),
+    category:       form.category.trim(),
+    subtitle,
+    price:          `PKR ${priceNum.toLocaleString()}`,
+    salePrice:      originalNum ? `PKR ${priceNum.toLocaleString()}`    : undefined,
+    originalPrice:  originalNum ? `PKR ${originalNum.toLocaleString()}` : undefined,
+    discountPercent: discountPct || undefined,
+    discountTag:    discountPct  ? `${discountPct}% OFF`  : undefined,
+    discount:       form.tag === 'New' ? 'New' : (discountPct ? `${discountPct}% OFF` : undefined),
+    tag:            form.tag || undefined,
+    image:          form.image.trim(),
+    images:         [form.image.trim()],
+    collections:    form.collections,
+  };
+}
+
+function productToForm(p) {
+  return {
+    title:       p.title || '',
+    category:    p.category || '',
+    priceNum:    parsePkr(p.salePrice || p.price),
+    originalNum: parsePkr(p.originalPrice),
+    image:       p.image || (p.images && p.images[0]) || '',
+    collections: p.collections || [],
+    tag:         p.tag || '',
+  };
+}
+
+/* ─────────────────────────────────────────────────────── small components */
 function StatCard({ label, value, sub, icon: Icon, accent }) {
   return (
     <div className="adm-stat-card" style={{ borderTop: `4px solid ${accent}` }}>
@@ -69,23 +134,204 @@ function StatusBadge({ status }) {
   );
 }
 
-/* ── main component ── */
+/* ── Product Card ── */
+function ProductCard({ product, onEdit, onDelete, deleting }) {
+  const col = (product.collections || []);
+  return (
+    <div className="adm-product-card">
+      <div className="adm-product-img-wrap">
+        {product.image
+          ? <img src={product.image} alt={product.title} className="adm-product-img" />
+          : <div className="adm-product-img-placeholder"><Package2 size={32} color="#ccc" /></div>
+        }
+        {product.tag && <span className="adm-product-tag">{product.tag}</span>}
+      </div>
+      <div className="adm-product-body">
+        <p className="adm-product-category">{product.category}</p>
+        <p className="adm-product-title">{product.title}</p>
+        <div className="adm-product-pricing">
+          <span className="adm-product-price">{product.salePrice || product.price}</span>
+          {product.originalPrice && (
+            <span className="adm-product-original">{product.originalPrice}</span>
+          )}
+          {product.discountTag && (
+            <span className="adm-product-discount">{product.discountTag}</span>
+          )}
+        </div>
+        <div className="adm-product-cols">
+          {col.map(c => {
+            const opt = COLLECTION_OPTIONS.find(o => o.value === c);
+            return opt
+              ? <span key={c} className="adm-col-badge">{opt.label}</span>
+              : null;
+          })}
+        </div>
+        <div className="adm-product-actions">
+          <button className="adm-prod-btn adm-prod-edit" onClick={() => onEdit(product)}>
+            <Pencil size={13} /> Edit
+          </button>
+          <button
+            className="adm-prod-btn adm-prod-delete"
+            onClick={() => onDelete(product._id)}
+            disabled={deleting === product._id}
+          >
+            {deleting === product._id
+              ? <Loader2 size={13} className="adm-spinner" />
+              : <Trash2 size={13} />}
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Product Modal ── */
+function ProductModal({ modal, onClose, onSaved }) {
+  const isEdit = modal.mode === 'edit';
+  const [form, setForm] = useState(isEdit ? productToForm(modal.product) : EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr]       = useState('');
+
+  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const toggleCol = (val) => {
+    setForm(prev => ({
+      ...prev,
+      collections: prev.collections.includes(val)
+        ? prev.collections.filter(c => c !== val)
+        : [...prev.collections, val],
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title || !form.category || !form.priceNum || !form.image) {
+      setErr('Title, category, price and image URL are required.'); return;
+    }
+    if (form.collections.length === 0) {
+      setErr('Select at least one collection.'); return;
+    }
+    setSaving(true); setErr('');
+    try {
+      const payload = buildProductPayload(form);
+      const saved = isEdit
+        ? await api.adminUpdateProduct(modal.product._id, payload)
+        : await api.adminCreateProduct(payload);
+      onSaved(saved, isEdit);
+    } catch (e) {
+      setErr(e.message || 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="adm-modal-overlay" onClick={onClose}>
+      <div className="adm-modal" onClick={e => e.stopPropagation()}>
+        <div className="adm-modal-header">
+          <h3>{isEdit ? 'Edit Product' : 'Add New Product'}</h3>
+          <button className="adm-modal-close" onClick={onClose}><X size={18} /></button>
+        </div>
+
+        {err && <p className="adm-modal-error"><AlertTriangle size={13} /> {err}</p>}
+
+        <form onSubmit={handleSubmit} className="adm-modal-form">
+          <div className="adm-modal-grid">
+            <div className="adm-modal-field adm-modal-full">
+              <label>Product Title *</label>
+              <input value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Lawn Tailored 3-Piece" />
+            </div>
+            <div className="adm-modal-field">
+              <label>Category *</label>
+              <input value={form.category} onChange={e => set('category', e.target.value)} placeholder="e.g. Embroidered | Lawn" />
+            </div>
+            <div className="adm-modal-field">
+              <label>Tag</label>
+              <select value={form.tag} onChange={e => set('tag', e.target.value)}>
+                <option value="">None</option>
+                <option value="New">New</option>
+                <option value="Sale">Sale</option>
+                <option value="Hot">Hot</option>
+              </select>
+            </div>
+            <div className="adm-modal-field">
+              <label>Price (PKR) *</label>
+              <input type="number" min="0" value={form.priceNum} onChange={e => set('priceNum', e.target.value)} placeholder="e.g. 4500" />
+            </div>
+            <div className="adm-modal-field">
+              <label>Original Price (PKR) <span className="adm-modal-hint">— for sale/discounted items</span></label>
+              <input type="number" min="0" value={form.originalNum} onChange={e => set('originalNum', e.target.value)} placeholder="e.g. 9000 (leave blank if no discount)" />
+            </div>
+            <div className="adm-modal-field adm-modal-full">
+              <label>Image URL *</label>
+              <input value={form.image} onChange={e => set('image', e.target.value)} placeholder="https://..." />
+            </div>
+          </div>
+
+          <div className="adm-modal-field" style={{ marginTop: 18 }}>
+            <label>Collections * <span className="adm-modal-hint">— select where this product appears</span></label>
+            <div className="adm-col-checkboxes">
+              {COLLECTION_OPTIONS.map(opt => (
+                <label key={opt.value} className="adm-col-check">
+                  <input
+                    type="checkbox"
+                    checked={form.collections.includes(opt.value)}
+                    onChange={() => toggleCol(opt.value)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {form.image && (
+            <div className="adm-modal-preview">
+              <p className="adm-modal-hint">Image preview:</p>
+              <img src={form.image} alt="preview" onError={e => { e.target.style.display = 'none'; }} />
+            </div>
+          )}
+
+          <div className="adm-modal-footer">
+            <button type="button" className="adm-modal-cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="adm-modal-save" disabled={saving}>
+              {saving ? <><Loader2 size={14} className="adm-spinner" /> Saving…</> : (isEdit ? 'Save Changes' : 'Add Product')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────── main component */
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab]   = useState('dashboard');
-  const [stats, setStats]           = useState(null);
-  const [orders, setOrders]         = useState([]);
-  const [customers, setCustomers]   = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+
+  // tab state
+  const [activeTab,        setActiveTab]        = useState('dashboard');
+  const [productsOpen,     setProductsOpen]     = useState(false);
+  const [productCollection,setProductCollection]= useState('all');
+
+  // data
+  const [stats,     setStats]     = useState(null);
+  const [orders,    setOrders]    = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [products,  setProducts]  = useState([]);
+
+  // ui
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState('');
   const [updatingId, setUpdatingId] = useState(null);
-  const [search, setSearch]         = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [search,     setSearch]     = useState('');
+  const [modal,      setModal]      = useState(null); // { mode:'add'|'edit', product? }
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  /* verify session */
+  /* verify admin session */
   useEffect(() => {
     if (!sessionStorage.getItem('admin_logged_in')) { navigate('/admin/login'); return; }
     api.adminCheck().catch(() => {
@@ -94,6 +340,7 @@ export default function AdminDashboard() {
     });
   }, [navigate]);
 
+  /* data loaders */
   const loadDashboard = useCallback(async () => {
     setLoading(true); setError('');
     try { setStats(await api.adminStats()); }
@@ -115,12 +362,21 @@ export default function AdminDashboard() {
     finally { setLoading(false); }
   }, []);
 
+  const loadProducts = useCallback(async (col) => {
+    setLoading(true); setError('');
+    try { setProducts(await api.adminGetProducts(col)); }
+    catch (e) { setError(e.message || 'Failed to load products.'); }
+    finally { setLoading(false); }
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'dashboard') loadDashboard();
     else if (activeTab === 'orders')    loadOrders();
     else if (activeTab === 'customers') loadCustomers();
-  }, [activeTab, loadDashboard, loadOrders, loadCustomers]);
+    else if (activeTab === 'products')  loadProducts(productCollection);
+  }, [activeTab, productCollection, loadDashboard, loadOrders, loadCustomers, loadProducts]);
 
+  /* handlers */
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdatingId(orderId);
     try {
@@ -131,31 +387,67 @@ export default function AdminDashboard() {
     finally { setUpdatingId(null); }
   };
 
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Delete this product? This cannot be undone.')) return;
+    setDeletingId(id);
+    try {
+      await api.adminDeleteProduct(id);
+      setProducts(prev => prev.filter(p => p._id !== id));
+    } catch (e) { alert('Delete failed: ' + e.message); }
+    finally { setDeletingId(null); }
+  };
+
+  const handleProductSaved = (savedProduct, isEdit) => {
+    if (isEdit) {
+      setProducts(prev => prev.map(p => p._id === savedProduct._id ? savedProduct : p));
+    } else {
+      setProducts(prev => [...prev, savedProduct]);
+    }
+    setModal(null);
+  };
+
   const handleLogout = async () => {
     try { await api.adminLogout(); } catch {}
     sessionStorage.removeItem('admin_logged_in');
     navigate('/admin/login');
   };
 
+  const switchToProducts = (col) => {
+    setActiveTab('products');
+    setProductCollection(col);
+    setSearch('');
+    setProductsOpen(true);
+  };
+
   const fmt = (n) => `PKR ${(n || 0).toLocaleString()}`;
 
+  /* filtered lists */
   const filteredOrders = orders.filter(o =>
     !search ||
     (o.orderNumber || '').toLowerCase().includes(search.toLowerCase()) ||
-    (o.email || '').toLowerCase().includes(search.toLowerCase())
+    (o.email       || '').toLowerCase().includes(search.toLowerCase())
   );
-
   const filteredCustomers = customers.filter(c =>
     !search ||
     (c.firstName || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.email || '').toLowerCase().includes(search.toLowerCase())
+    (c.email     || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredProducts = products.filter(p =>
+    !search ||
+    (p.title    || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.category || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const navItems = [
-    { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'orders',    Icon: ShoppingBag,     label: 'Orders'    },
-    { id: 'customers', Icon: Users,           label: 'Customers' },
-  ];
+  /* page title */
+  const pageTitle = () => {
+    if (activeTab === 'orders')    return 'All Orders';
+    if (activeTab === 'customers') return 'Customers';
+    if (activeTab === 'products') {
+      const col = PRODUCT_COLLECTIONS.find(c => c.value === productCollection);
+      return `Products — ${col?.label || 'All'}`;
+    }
+    return 'Dashboard';
+  };
 
   return (
     <div className="adm-layout">
@@ -170,16 +462,61 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="adm-nav">
-          {navItems.map(({ id, Icon, label }) => (
-            <button
-              key={id}
-              className={`adm-nav-btn ${activeTab === id ? 'active' : ''}`}
-              onClick={() => { setActiveTab(id); setSearch(''); }}
-            >
-              <Icon size={16} strokeWidth={activeTab === id ? 2.2 : 1.8} className="adm-nav-icon" />
-              <span>{label}</span>
-            </button>
-          ))}
+          {/* Dashboard */}
+          <button
+            className={`adm-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('dashboard'); setSearch(''); setProductsOpen(false); }}
+          >
+            <LayoutDashboard size={16} strokeWidth={activeTab === 'dashboard' ? 2.2 : 1.8} className="adm-nav-icon" />
+            <span>Dashboard</span>
+          </button>
+
+          {/* Orders */}
+          <button
+            className={`adm-nav-btn ${activeTab === 'orders' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('orders'); setSearch(''); setProductsOpen(false); }}
+          >
+            <ShoppingBag size={16} strokeWidth={activeTab === 'orders' ? 2.2 : 1.8} className="adm-nav-icon" />
+            <span>Orders</span>
+          </button>
+
+          {/* Customers */}
+          <button
+            className={`adm-nav-btn ${activeTab === 'customers' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('customers'); setSearch(''); setProductsOpen(false); }}
+          >
+            <Users size={16} strokeWidth={activeTab === 'customers' ? 2.2 : 1.8} className="adm-nav-icon" />
+            <span>Customers</span>
+          </button>
+
+          {/* Products (expandable) */}
+          <button
+            className={`adm-nav-btn ${activeTab === 'products' ? 'active' : ''}`}
+            onClick={() => {
+              setProductsOpen(prev => !prev);
+              if (activeTab !== 'products') switchToProducts('all');
+            }}
+          >
+            <Package2 size={16} strokeWidth={activeTab === 'products' ? 2.2 : 1.8} className="adm-nav-icon" />
+            <span style={{ flex: 1 }}>Products</span>
+            {productsOpen
+              ? <ChevronDown size={13} style={{ marginLeft: 'auto' }} />
+              : <ChevronRight size={13} style={{ marginLeft: 'auto' }} />}
+          </button>
+
+          {productsOpen && (
+            <div className="adm-nav-sub">
+              {PRODUCT_COLLECTIONS.map(col => (
+                <button
+                  key={col.value}
+                  className={`adm-nav-sub-btn ${activeTab === 'products' && productCollection === col.value ? 'active' : ''}`}
+                  onClick={() => switchToProducts(col.value)}
+                >
+                  {col.label}
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
 
         <div className="adm-sidebar-footer">
@@ -199,31 +536,33 @@ export default function AdminDashboard() {
         {/* Topbar */}
         <div className="adm-topbar">
           <div>
-            <h1 className="adm-page-title">
-              {activeTab === 'dashboard' ? 'Dashboard' :
-               activeTab === 'orders'    ? 'All Orders' : 'Customers'}
-            </h1>
+            <h1 className="adm-page-title">{pageTitle()}</h1>
             <p className="adm-page-date">{today}</p>
           </div>
           <div className="adm-topbar-right">
-            {(activeTab === 'orders' || activeTab === 'customers') && (
+            {(activeTab === 'orders' || activeTab === 'customers' || activeTab === 'products') && (
               <div className="adm-search-wrap">
                 <Search size={14} className="adm-search-icon" />
                 <input
                   className="adm-search"
-                  placeholder={activeTab === 'orders' ? 'Search by order # or email…' : 'Search by name or email…'}
+                  placeholder={
+                    activeTab === 'orders'    ? 'Search by order # or email…' :
+                    activeTab === 'customers' ? 'Search by name or email…' :
+                    'Search products…'
+                  }
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
               </div>
             )}
             {activeTab === 'dashboard' && (
-              <button
-                className="adm-refresh-btn"
-                onClick={loadDashboard}
-                title="Refresh"
-              >
+              <button className="adm-refresh-btn" onClick={loadDashboard} title="Refresh">
                 <RefreshCw size={15} />
+              </button>
+            )}
+            {activeTab === 'products' && (
+              <button className="adm-add-product-btn" onClick={() => setModal({ mode: 'add' })}>
+                <Plus size={15} /> Add Product
               </button>
             )}
             <div className="adm-avatar">A</div>
@@ -247,11 +586,10 @@ export default function AdminDashboard() {
         {/* ── DASHBOARD TAB ── */}
         {!loading && activeTab === 'dashboard' && stats && (
           <div className="adm-dashboard-content">
-
             <div className="adm-stats-grid">
-              <StatCard label="Total Orders"    value={stats.totalOrders}       sub="All time"                            icon={Package}    accent="#1565c0" />
-              <StatCard label="Total Revenue"   value={fmt(stats.totalRevenue)} sub="All time"                            icon={DollarSign} accent="#2e7d32" />
-              <StatCard label="Total Customers" value={stats.totalCustomers}    sub="Registered accounts"                 icon={Users}      accent="#6a1b9a" />
+              <StatCard label="Total Orders"    value={stats.totalOrders}       sub="All time"                             icon={Package}    accent="#1565c0" />
+              <StatCard label="Total Revenue"   value={fmt(stats.totalRevenue)} sub="All time"                             icon={DollarSign} accent="#2e7d32" />
+              <StatCard label="Total Customers" value={stats.totalCustomers}    sub="Registered accounts"                  icon={Users}      accent="#6a1b9a" />
               <StatCard label="Today's Orders"  value={stats.todayOrders}       sub={fmt(stats.todayRevenue) + ' revenue'} icon={Calendar}   accent="#e65100" />
             </div>
 
@@ -427,7 +765,7 @@ export default function AdminDashboard() {
                           ? <CheckCircle2 size={14} color="#2e7d32" strokeWidth={2.5} />
                           : <span style={{ color: '#ccc' }}>—</span>}
                       </td>
-                      <td>{(c.cart || []).length}</td>
+                      <td>{(c.cart     || []).length}</td>
                       <td>{(c.wishlist || []).length}</td>
                       <td className="adm-sub-text">{new Date(c.createdAt).toLocaleDateString()}</td>
                     </tr>
@@ -437,7 +775,59 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ── PRODUCTS TAB ── */}
+        {!loading && activeTab === 'products' && (
+          <div>
+            {/* Collection sub-tabs */}
+            <div className="adm-collection-tabs">
+              {PRODUCT_COLLECTIONS.map(col => (
+                <button
+                  key={col.value}
+                  className={`adm-col-tab ${productCollection === col.value ? 'active' : ''}`}
+                  onClick={() => switchToProducts(col.value)}
+                >
+                  {col.label}
+                  {productCollection === col.value && (
+                    <span className="adm-col-tab-count">{filteredProducts.length}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {filteredProducts.length === 0 ? (
+              <div className="adm-products-empty">
+                <Package2 size={48} color="#ccc" />
+                <p>No products found{search ? ` for "${search}"` : ''}.</p>
+                <button className="adm-add-product-btn" onClick={() => setModal({ mode: 'add' })}>
+                  <Plus size={14} /> Add First Product
+                </button>
+              </div>
+            ) : (
+              <div className="adm-product-grid">
+                {filteredProducts.map(p => (
+                  <ProductCard
+                    key={p._id}
+                    product={p}
+                    onEdit={product => setModal({ mode: 'edit', product })}
+                    onDelete={handleDeleteProduct}
+                    deleting={deletingId}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      {/* ── Product Modal ── */}
+      {modal && (
+        <ProductModal
+          modal={modal}
+          onClose={() => setModal(null)}
+          onSaved={handleProductSaved}
+        />
+      )}
     </div>
   );
 }

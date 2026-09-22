@@ -1,15 +1,5 @@
 const mongoose = require('mongoose');
 
-const orderItemSchema = new mongoose.Schema({
-  id:       { type: String },
-  title:    { type: String },
-  price:    { type: String },
-  salePrice:{ type: String },
-  image:    { type: String },
-  size:     { type: String },
-  qty:      { type: Number, default: 1 },
-}, { _id: false });
-
 const shippingSchema = new mongoose.Schema({
   firstName:      { type: String },
   lastName:       { type: String },
@@ -29,7 +19,7 @@ const orderSchema = new mongoose.Schema(
     newsletter:    { type: Boolean, default: false },
     shipping:      { type: shippingSchema },
     paymentMethod: { type: String, default: 'cod' },
-    items:         { type: [orderItemSchema], default: [] },
+    items:         { type: Array, default: [] },
     subtotal:      { type: Number, default: 0 },
     shippingCost:  { type: Number, default: 0 },
     total:         { type: Number, default: 0 },

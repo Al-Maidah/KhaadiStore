@@ -1,5 +1,6 @@
-const User  = require('../Models/userModel');
-const Order = require('../Models/orderModel');
+const User    = require('../Models/userModel');
+const Order   = require('../Models/orderModel');
+const Product = require('../Models/productModel');
 
 // ── Admin credentials come from env vars ──────────────────────────────────────
 const ADMIN_ID       = () => process.env.ADMIN_ID       || 'KHAADI_ADMIN_001';
@@ -171,4 +172,61 @@ async function updateOrderStatus(req, res) {
   }
 }
 
-module.exports = { login, logout, check, getStats, getOrders, getCustomers, updateOrderStatus, requireAdmin };
+// ── Product CRUD ─────────────────────────────────────────────────────────────
+
+// GET /admin/products?collection=xxx
+async function getProducts(req, res) {
+  try {
+    const { collection } = req.query;
+    const filter = collection ? { collections: collection } : {};
+    const products = await Product.find(filter).sort({ id: 1 }).lean();
+    return res.json(products);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+// POST /admin/products
+async function createProduct(req, res) {
+  try {
+    const last = await Product.findOne().sort({ id: -1 }).lean();
+    const newId = (last?.id || 0) + 1;
+    const product = await Product.create({ ...req.body, id: newId });
+    return res.status(201).json(product);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+// PUT /admin/products/:id   (MongoDB _id)
+async function updateProduct(req, res) {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { returnDocument: 'after' }
+    );
+    if (!product) return res.status(404).json({ message: 'Product not found.' });
+    return res.json(product);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+// DELETE /admin/products/:id   (MongoDB _id)
+async function deleteProduct(req, res) {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found.' });
+    return res.json({ ok: true, deleted: req.params.id });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+module.exports = {
+  login, logout, check,
+  getStats, getOrders, getCustomers, updateOrderStatus,
+  getProducts, createProduct, updateProduct, deleteProduct,
+  requireAdmin,
+};

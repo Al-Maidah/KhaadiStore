@@ -105,6 +105,13 @@ export const api = {
   adminCustomers: () => request('/admin/customers'),
   adminUpdateStatus: (id, status) => request(`/admin/orders/${id}/status`, { method: 'PUT', body: { status } }),
   adminLogout: () => request('/admin/logout', { method: 'POST' }),
+
+  // Product CRUD (admin)
+  adminGetProducts: (collection) =>
+    request(`/admin/products${collection && collection !== 'all' ? `?collection=${encodeURIComponent(collection)}` : ''}`),
+  adminCreateProduct: (body) => request('/admin/products', { method: 'POST', body }),
+  adminUpdateProduct: (id, body) => request(`/admin/products/${id}`, { method: 'PUT', body }),
+  adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
 };
 
 export default api;
